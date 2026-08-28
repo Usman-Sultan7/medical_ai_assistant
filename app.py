@@ -4,14 +4,74 @@ from src.cache_manager import initialize_cache
 from src.chains import get_llm, generate_assessment, stream_narrative
 from src.utils import safe_parse_json
 
-# 1. UI Configuration
-st.set_page_config(page_title="MediGuide AI", layout="wide")
+import streamlit as st
 
-# 2. Sidebar
+# 1. Check if the user has already entered their API key in this session
+if 'api_key_entered' not in st.session_state:
+    st.session_state.api_key_entered = False
+
+if not st.session_state.api_key_entered:
+    # --- BEAUTIFUL AUTHENTICATION SCREEN ---
+    
+    # Center-aligned headers using HTML/Markdown
+    st.markdown(
+        """
+        <h1 style='text-align: center;'>🩺 MediGuide AI</h1>
+        <p style='text-align: center; color: #666666; font-size: 18px;'>
+            AI-Powered Medical Symptom Assessment & Patient Guidance
+        </p>
+        <br><br>
+        """, 
+        unsafe_allow_html=True
+    )
+    
+    # Use columns to create a centered "card" in the middle of the screen
+    # The ratio [1, 1.5, 1] means the middle column is slightly wider than the edges
+    left_spacer, center_column, right_spacer = st.columns([1, 1.5, 1])
+    
+    with center_column:
+        st.markdown("### 🔐 Enter OpenAI API Key")
+        
+        # The input field
+        user_key = st.text_input(
+            label="OpenAI API Key",
+            type="password",
+            placeholder="sk-...",
+            label_visibility="collapsed" # Hides the small label since we have the big heading
+        )
+        
+        st.caption("Your API key is used strictly for this session and is not saved.")
+        
+        # The prominent continue button
+        if st.button("Continue ➔", type="primary", use_container_width=True):
+            if user_key.startswith("sk-"): # Basic validation
+                st.session_state.api_key = user_key
+                st.session_state.api_key_entered = True
+                st.rerun() # Instantly refresh the page to show the main app
+            else:
+                st.error("Please enter a valid OpenAI API key (starts with 'sk-').")
+                
+    # Stop the rest of the app from running until this screen is passed
+    st.stop()
+
+# ==========================================
+# --- MAIN DASHBOARD INTERFACE GOES HERE ---
+# ==========================================
+# (Everything below this line only runs AFTER they click Continue)
+
+# You can access the key anywhere below using: st.session_state.api_key
+
+st.sidebar.title("MediGuide Settings")
+st.sidebar.success("API Key Provided!")
+# ... the rest of your app code ...
+
 with st.sidebar:
     st.title("MediGuide AI")
     st.warning(MEDICAL_DISCLAIMER)
-    api_key = st.text_input("OpenAI API Key", value=OPENAI_API_KEY, type="password")
+    
+    # REPLACED LINE: Pull the key from the landing page instead of asking again
+    api_key = st.session_state.api_key 
+    
     cache_type = st.radio("Cache Type", ["InMemoryCache", "SQLiteCache"])
     language = st.selectbox("Language", LANGUAGE_OPTIONS)
     
@@ -26,7 +86,7 @@ st.error(MEDICAL_DISCLAIMER)
 with st.form("patient_form"):
     col1, col2 = st.columns(2)
     with col1:
-        age = st.text_input("Age", "25")
+        age = st.text_input("Age", "0")
         gender = st.selectbox("Gender", GENDER_OPTIONS)
         duration = st.selectbox("Duration of Symptoms", DURATION_OPTIONS)
     with col2:
