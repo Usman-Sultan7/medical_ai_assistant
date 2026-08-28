@@ -14,6 +14,10 @@ with st.sidebar:
     api_key = st.text_input("OpenAI API Key", value=OPENAI_API_KEY, type="password")
     cache_type = st.radio("Cache Type", ["InMemoryCache", "SQLiteCache"])
     language = st.selectbox("Language", LANGUAGE_OPTIONS)
+    
+if not api_key:
+    st.info("👈 Please enter your OpenAI API Key in the sidebar to access the assessment form.")
+    st.stop()
 
 # 3. Main Form
 st.title("Patient Symptom Assessment")
