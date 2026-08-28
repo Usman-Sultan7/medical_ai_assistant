@@ -1,1 +1,1 @@
-link of deployment : https://medical-ai-assistant-1.streamlit.app/
+link of deployment : https://medical-ai-assistant-2.streamlit.app/
